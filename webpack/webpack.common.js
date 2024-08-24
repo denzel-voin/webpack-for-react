@@ -2,22 +2,32 @@ const path = require('path'); //для того чтобы превратить 
 const HTMLWebpackPlugins = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const webpack = require('webpack'); //подключаем webpack для использования встроенного плагина EnvironmentPlugin
+const production = process.env.NODE_ENV === 'production';
+const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin')
 
 module.exports = {
-  entry: path.resolve(__dirname, './src/index.ts'), //точка входа в наше приложение содержит абсолютный путь к index.ts
+  entry: path.resolve(__dirname, '..', './src/index.tsx'), //точка входа в наше приложение содержит абсолютный путь к index.tsx
   output: {
-    path: path.resolve(__dirname, './dist'), //путь, куда будет собираться наш проект
-    filename: 'main.js', // имя нашего бандла
+    path: path.resolve(__dirname, '..', './dist'), //путь до папки dist изменился
+    filename: production
+      ? 'static/scripts/[name].[contenthash].js'// добавляем хеш к имени файла, если запускаем в режиме production
+      : 'static/scripts/[name].js',
+    publicPath: '/',
   },
   plugins: [
     new HTMLWebpackPlugins({
-      template: path.resolve(__dirname, 'public/index.html'),
-      inject: "body"
+      template: path.resolve(__dirname, '..', './public/index.html'), //путь до папки public изменился
     }),
     new CleanWebpackPlugin(),
     new MiniCssExtractPlugin({
-      filename: 'static/styles/index.css',
+      filename: 'static/styles/[name].[contenthash].css'
     }),
+    //Плагин позволяет установить переменные окружения, можно переопределить переменную из блока script файла package.json
+    new webpack.EnvironmentPlugin({
+      NODE_ENV: 'development', // значение по умолчанию 'development', если переменная process.env.NODE_ENV не передана при вызове сборки
+    }),
+    new ReactRefreshWebpackPlugin(),
   ],
   //Нужно помочь вебпаку научиться работать с jsx- и tsx-файлами, для этого используют ts-loader
   module: {
@@ -44,8 +54,8 @@ module.exports = {
       {
         test: /\.(sa|sc|c)ss$/,
         use: [
-          MiniCssExtractPlugin.loader,
-          // 'style-loader',
+          //в режиме production создаём физический файл в папке dist, в dev режиме добавляем стили в тег style в html-файле
+          production ? MiniCssExtractPlugin.loader : 'style-loader',
           {
             loader: 'css-loader',
             options: {
