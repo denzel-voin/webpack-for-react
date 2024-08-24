@@ -1,5 +1,5 @@
-const numbers:number[] = [2, 3, 5];
+import style from './index.module.sass';
+import './index.sass';
+import './assets/images/file.jpg';
 
-const doubledNumbers = numbers.map(number => number * 2);
-
-console.log(doubledNumbers);
+console.log(style);
